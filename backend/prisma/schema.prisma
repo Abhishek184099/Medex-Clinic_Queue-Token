@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+enum QueueKind{
+  emergency
+  appointment
+  walk_in
+}
+
+enum PatientStatus{
+  waiting
+  in_consultation
+  done
+  left_queue
+}
+
+enum CallRule{
+    emergency
+    due_appointment
+    walk_in
+    early_appointment
+}
+
+model Doctor{
+  id String @id 
+  name String
+  patient Patient[]
+  calllogs CallLog[]
+
+  @@map ("doctors")
+}
+
+model Patient{
+   id              Int       @id @default(autoincrement())
+  token           String
+  day             String
+  name            String
+  age             Int
+  queueKind       QueueKind @map("queue_kind")
+  appointmentTime DateTime? @map("appointment_time") @db.Timestamptz(3)
+  checkedInAt     DateTime  @map("checked_in_at") @db.Timestamptz(3)
+  status          String    @default("waiting")
+  noShowCount     Int       @default(0) @map("no_show_count")
+  doctorId        String?   @map("doctor_id")
+  doctor          Doctor?   @relation(fields: [doctorId], references: [id])
+  calls           CallLog[]
+
+  @@unique([day, token])
+  @@map("patients")
+
+}
+
+model CallLog{
+  id        Int       @id @default(autoincrement())
+  day       String
+  doctorId  String    @map("doctor_id")
+  patientId Int       @map("patient_id")
+  token     String
+  name      String
+  rule      CallRule
+  calledAt  DateTime  @map("called_at") @db.Timestamptz(3)
+  doctor    Doctor    @relation(fields: [doctorId], references: [id])
+  patient   Patient   @relation(fields: [patientId], references: [id])
+
+  @@map("call_log")
+
+}
+
+model TokenCounter {
+  day        String
+  prefix     String @db.Char(1)
+  lastNumber Int    @default(0) @map("last_number")
+
+  @@id([day, prefix])
+  @@map("token_counters")
+}
