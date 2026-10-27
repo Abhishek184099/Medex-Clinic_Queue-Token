@@ -8,29 +8,26 @@ const TEST_DB_URL = process.env.TEST_DATABASE_URL;
 const prisma = createPrisma(TEST_DB_URL ?? "postgres://unused");
 
 describe.skipIf(!TEST_DB_URL)("clinic.json example replay", () => {
-
-  const app = createApp({ prisma , allowOverride: true });
+  const app = createApp({ prisma, allowOverride: true });
   const examples = loadExamples();
 
   beforeAll(() => seedDoctors(prisma));
 
   beforeEach(() =>
-    prisma.$executeRawUnsafe("TRUNCATE patients, token_counters, call_log RESTART IDENTITY"),
+    prisma.$executeRawUnsafe(
+      "TRUNCATE patients, token_counters, call_log RESTART IDENTITY",
+    ),
   );
 
   afterAll(() => prisma.$disconnect());
 
   examples.forEach((example, index) => {
-  it(
-    `example ${index + 1} matches tokens, calls and queue snapshots`,
-    async () => {
+    it(`example ${index + 1} matches tokens, calls and queue snapshots`, async () => {
       const actual = await replay(app, example);
 
       expect(actual.tokens).toEqual(example.expected.tokens);
       expect(actual.calls).toEqual(example.expected.calls);
       expect(actual.queueSnapshots).toEqual(example.expected.queueSnapshots);
-    },
-    30_000,
-  );
-});
+    }, 30_000);
+  });
 });

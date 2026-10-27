@@ -47,7 +47,11 @@ export function loadExamples(file = CLINIC_FILE): ReplayExample[] {
 
 const hhmm = (iso: string): string => iso.slice(11, 16);
 
-const DOCTOR_PATH = { call_next: "call-next", done: "done", no_show: "no-show" } as const;
+const DOCTOR_PATH = {
+  call_next: "call-next",
+  done: "done",
+  no_show: "no-show",
+} as const;
 
 export async function replay(app: Express, example: ReplayExample) {
   const tokens: Record<string, string> = {};
@@ -89,7 +93,15 @@ export async function replay(app: Express, example: ReplayExample) {
       case "queue": {
         const res = await request(app).get("/api/queue").set("X-Now", event.at);
         expectStatus(res, 200, event);
-        queueSnapshots.push({ at: event.at, queue: res.body.waiting });
+        queueSnapshots.push({
+          at: event.at,
+          queue: res.body.waiting.map((p: QueueRow) => ({
+            position: p.position,
+            token: p.token,
+            name: p.name,
+            estimatedWaitMinutes: p.estimatedWaitMinutes,
+          })),
+        });
         break;
       }
     }
@@ -98,7 +110,11 @@ export async function replay(app: Express, example: ReplayExample) {
   return { tokens, calls, queueSnapshots };
 }
 
-function expectStatus(res: { status: number; body: unknown }, expected: number, event: ReplayEvent) {
+function expectStatus(
+  res: { status: number; body: unknown },
+  expected: number,
+  event: ReplayEvent,
+) {
   if (res.status !== expected) {
     throw new Error(
       `${event.type} at ${event.at} returned ${res.status} (expected ${expected}): ${JSON.stringify(res.body)}`,

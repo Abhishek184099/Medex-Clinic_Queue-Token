@@ -4,8 +4,10 @@ export const PATIENT_STATUS = {
   waiting: "waiting",
   inConsultation: "in_consultation",
   done: "done",
-  left: "left",
+  remove: "remove",
 } as const;
+
+
 
 
 export interface CalledPatient {
@@ -19,6 +21,9 @@ export interface ActiveConsultation {
   doctorId: string;
   token: string;
   name: string;
+  age: number;
+  checkedInAt: Date;
+  appointmentTime: Date | null;
 }
 
 export interface CallLogEntry {
@@ -43,4 +48,28 @@ export interface QueueTx {
   requeueAsWalkIn(patientId: number, checkedInAt: Date): Promise<void>;
   leaveQueue(patientId: number): Promise<void>;
   recordCall(entry: CallLogEntry): Promise<void>;
+}
+
+export interface PatientSummary {
+  age: number;
+  checkedInAt: string;
+  appointmentTime: string | null;
+}
+
+export interface NowServingEntry extends PatientSummary {
+  doctorId: string;
+  token: string;
+  name: string;
+}
+
+export interface WaitingEntry extends PatientSummary {
+  position: number;
+  token: string;
+  name: string;
+  estimatedWaitMinutes: number;
+}
+
+export interface QueueView {
+  nowServing: NowServingEntry[];
+  waiting: WaitingEntry[];
 }

@@ -65,6 +65,7 @@ export class DoctorQueueService {
     return this.repo.transaction(async (tx) => {
       await requireDoctor(tx, doctorId);
       const current = await requireCurrentPatient(tx, doctorId);
+      
 
       const outcome = noShowOutcome(current.noShowCount);
       if (outcome === "requeued") {
@@ -73,7 +74,7 @@ export class DoctorQueueService {
         await tx.leaveQueue(current.id);
       }
 
-      return { outcome };
+      return { outcome } ;
     });
   }
 }
@@ -91,6 +92,9 @@ async function requireCurrentPatient(
   const current = await tx.currentPatient(doctorId);
   if (!current) {
     throw new AppError(409, "You are not seeing a patient.");
+  }
+  if(!current.token){
+          throw new AppError(405, "no token.");
   }
   return current;
 }

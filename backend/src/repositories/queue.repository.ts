@@ -1,4 +1,4 @@
-import { Prisma , PrismaClient } from "../generated/prisma/client";
+import { Prisma , PrismaClient, QueueKind } from "../generated/prisma/client";
 import type { CallRule, WaitingPatient } from "../contract/queue";
 import  {
   type QueueTx,
@@ -7,6 +7,7 @@ import  {
   type CallLogEntry,
   PATIENT_STATUS
 } from "../contract/queue-tx";
+import { TOKEN_PREFIX } from "../contract/check-in";
 
 export interface IQueueRepository {
   transaction<T>(work: (tx: QueueTx) => Promise<T>): Promise<T>;
@@ -54,12 +55,11 @@ function createQueueTx(db: Prisma.TransactionClient): QueueTx {
     async activeConsultations() {
       const rows = await db.patient.findMany({
         where: { status: PATIENT_STATUS.inConsultation },
-        select: { doctorId: true, token: true, name: true },
+        select: { doctorId: true, token: true, name: true,age : true, checkedInAt: true, appointmentTime:true },
         orderBy: { doctorId: "asc" },
       });
-      // doctorId is nullable in the schema, but an in-consultation patient always has one.
       return rows.flatMap((row) =>
-        row.doctorId ? [{ doctorId: row.doctorId, token: row.token, name: row.name }] : [],
+        row.doctorId ? [{ ...row , doctorId:row.doctorId}] : [],
       );
     },
 
@@ -78,7 +78,6 @@ function createQueueTx(db: Prisma.TransactionClient): QueueTx {
       });
     },
 
-    // Fairness only looks at the last 3 calls that weren't emergencies.
     async recentNonEmergencyRules(day) {
       const rows = await db.callLog.findMany({
         where: { day, rule: { not: "emergency" } },
@@ -103,8 +102,7 @@ function createQueueTx(db: Prisma.TransactionClient): QueueTx {
       });
     },
 
-    // Rule 5, first no-show: the patient keeps their token, becomes a walk-in,
-    // and their check-in time becomes the time of the no-show.
+
     async requeueAsWalkIn(patientId, checkedInAt) {
       await db.patient.update({
         where: { id: patientId },
@@ -118,12 +116,11 @@ function createQueueTx(db: Prisma.TransactionClient): QueueTx {
       });
     },
 
-    // Rule 5, second no-show: the patient leaves the queue.
     async leaveQueue(patientId) {
       await db.patient.update({
         where: { id: patientId },
         data: {
-          status: PATIENT_STATUS.left,
+          status: PATIENT_STATUS.remove,
           doctorId: null,
           noShowCount: { increment: 1 },
         },
