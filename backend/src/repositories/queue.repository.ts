@@ -1,13 +1,13 @@
 import { Prisma , PrismaClient, QueueKind } from "../generated/prisma/client";
-import type { CallRule, WaitingPatient } from "../contract/queue";
+import type { CallRule, WaitingPatient } from "../domain/queue";
 import  {
   type QueueTx,
   type CalledPatient,
   type ActiveConsultation,
   type CallLogEntry,
   PATIENT_STATUS
-} from "../contract/queue-tx";
-import { TOKEN_PREFIX } from "../contract/check-in";
+} from "../domain/queue-tx";
+import { TOKEN_PREFIX } from "../domain/check-in";
 
 export interface IQueueRepository {
   transaction<T>(work: (tx: QueueTx) => Promise<T>): Promise<T>;

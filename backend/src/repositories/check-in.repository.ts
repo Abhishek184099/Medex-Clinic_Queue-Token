@@ -1,5 +1,5 @@
 import type { PrismaClient } from "../generated/prisma/client";
-import type { CheckInRecord, TokenPrefix } from "../contract/check-in";
+import type { CheckInRecord, TokenPrefix } from "../domain/check-in";
 
 export interface NewCheckIn extends CheckInRecord {
   day: string;
