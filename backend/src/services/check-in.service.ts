@@ -5,7 +5,7 @@ import {
   CheckInInput,
   CheckInRecord,
   CheckInResult,
-} from "../contract/check-in";
+} from "../domain/check-in";
 import type { CheckInRepository } from "../repositories/check-in.repository";
 
 export class CheckInService {

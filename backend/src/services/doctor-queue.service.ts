@@ -1,8 +1,8 @@
 import { clinicDay } from "../lib/clock";
-import { QueueKind } from "../contract/check-in";
-import { type NoShowOutcome , selectNextPatient, noShowOutcome  } from "../contract/queue";
+import { QueueKind } from "../domain/check-in";
+import { type NoShowOutcome , selectNextPatient, noShowOutcome  } from "../domain/queue";
 import { AppError } from "../lib/error";
-import { QueueTx , CalledPatient } from "../contract/queue-tx";
+import { QueueTx , CalledPatient } from "../domain/queue-tx";
 import type { QueueRepository } from "../repositories/queue.repository";
 
 export interface CallNextResult {
