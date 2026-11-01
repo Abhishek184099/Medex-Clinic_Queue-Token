@@ -1,8 +1,8 @@
 import { clinicDay } from "../lib/clock";
 import type { ClinicSettings } from "../lib/clinic";
-import { estimateWait, simulateQueue } from "../contract/queue";
+import { estimateWait, simulateQueue } from "../domain/queue";
 import type { QueueRepository } from "../repositories/queue.repository";
-import { QueueView , PatientSummary} from "../contract/queue-tx";
+import { QueueView , PatientSummary} from "../domain/queue-tx";
 
 
 
